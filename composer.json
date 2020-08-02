@@ -1,6 +1,6 @@
 {
     "name": "facile-it/php-oauth2-http-client",
-    "description": "HTTP client for OpenID/OAuth2 authorization",
+    "description": "HTTPlug plugin for OpenID/OAuth2 authorization support",
     "type": "library",
     "license": "MIT",
     "authors": [
