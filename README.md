@@ -9,7 +9,7 @@ HTTPPlug plugin for OAuth2 authorization.
 [![Build Status](https://scrutinizer-ci.com/g/facile-it/php-oauth2-http-client/badges/build.png?b=master)](https://scrutinizer-ci.com/g/facile-it/php-oauth2-http-client/build-status/master)
 [![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/facile-it/php-oauth2-http-client/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/facile-it/php-oauth2-http-client/?branch=master)
 
-This package allows you to use a compatible PSR-18 HTTP client and handle OAuth2 authorization when request in an external resource.
+This package allows you to use a compatible PSR-18 HTTP client and handle OAuth2 authorization when making a request to an external protected resource.
 
 This package is based on [facile-it/php-openid-client](https://github.com/facile-it/php-openid-client) to handle
 authentication. You need to understand how to use it, specially on creating a Client.
@@ -25,6 +25,10 @@ composer require facile-it/php-oauth2-http-client
 This library provides you an [HTTPlug](http://httplug.io/) plugin to handle authorization, so you need to create an instance of it.
 
 The Client will be used for authentication and requests to the token endpoint.
+
+When the resource server answers with a `401` or `403` status code, this plugin try to make an authorization request to 
+obtain a Bearer Access Token, and retry the request with the filled `Authorization` header.
+By default, an authorization request to obtain an access token is always made before to execute the real request. 
 
 ```php
 // facile-it/php-openid-client dependencies
@@ -43,7 +47,8 @@ Now you can inject the plugin on your client.
 
 ## Usage with a PSR-18 HTTP client
 
-To use a PSR-18 client you can use our plugin instance create before and use a  :
+To use a PSR-18 client you can use our plugin instance created before and use the PluginClient decorator from 
+[`php-http/client-common`](https://github.com/php-http/client-common):
 
 ```php
 use Facile\OAuth2\HttpClient\OAuth2Plugin;
@@ -55,14 +60,13 @@ use Http\Client\Common\PluginClient;
 // use your PSR-18 HTTP client
 /** @var ClientInterface $psrHttpClient */
 
-
 // use the PluginClient class from php-http/client-common to decorate your client and use the plugin
 $httpClient = new PluginClient($psrHttpClient, [$oauth2Plugin]);
 ```
 
 ## Advanced usage for production environments
 
-There are some improvements that we can do to customize authorization behaviour and/or to improve performance in 
+There are some improvements that we can do to customize authorization behaviour and to improve performance in 
 production environments.
 
 ### Custom grant parameters
@@ -83,6 +87,7 @@ $oauth2Plugin = new OAuth2Plugin(
     $client,
     null,
     [
+        // custom default grant parameters
         'grant_type' => 'urn:ietf:params:oauth:grant-type:token-exchange',
     ]
 );
@@ -104,6 +109,7 @@ use Facile\OAuth2\HttpClient\Request\OAuth2Request;
 
 $oauth2Request = (new OAuth2Request($request))
     ->withGrantParams([
+        // request grant parameters
         'my-custom-param' => 'my-value',
     ]);
 $response = $psrHttpClient->sendRequest($oauth2Request);
@@ -113,6 +119,12 @@ $response = $psrHttpClient->sendRequest($oauth2Request);
 
 With the ability to use custom grant parameters for each request, is simple to exchange tokens 
 (see [Token-Exchange (RFC8693)](https://tools.ietf.org/html/rfc8693)).
+
+Image that your API resources (service A) are protected, and the user should have his personal access-token 
+(the subject token, maybe a JWT with user infos).
+Then, service A needs to make a request to another protected Resource Server (service B).
+You can't use the same access token provided by the user because the JWT audience is just for the service A, so you
+need to exchange the token with another one with the audience for the service B.
 
 ```php
 use Psr\Http\Client\ClientInterface as HttpClient;
@@ -143,7 +155,7 @@ $plugin = new OAuth2Plugin(
 // your HTTP request
 /** @var RequestInterface $request */
 
-// the subject token can be the access token used from the user to call your APIs
+// the subject token can be the access token provided by the user requesting your APIs
 $subjectToken = '';
 
 // then you need to call another service (my-resource-server), but you need another access token with the right audience
@@ -158,7 +170,7 @@ $response = $apiClient->sendRequest($apiRequest);
 
 To improve performance and avoid to fetch tokens when not necessary we can cache tokens using the `CachedProvider`.
 
-The cache is based on the grant parameters
+The cache is based on the client, the request URI host, and grant parameters.
 
 ```php
 use Facile\OpenIDClient\Service\AuthorizationService;
@@ -176,6 +188,30 @@ use Psr\SimpleCache\CacheInterface;
 $oauth2Plugin = new OAuth2Plugin(
     $authorizationService,
     $client,
-    new CachedProvider($cache /*, $ttl (in seconds) = 1800 */)
+    new CachedProvider($cache /*, default TTL (in seconds) = 1800 */)
+);
+```
+
+### Authorization by request
+
+Sometimes, only few resources are protected, so you don't always need to make and authorization request to every HTTP request.
+
+You can disable it, so authorization will be made only if the resource server request it (with a `401` or `403` response code). 
+
+```php
+use Facile\OpenIDClient\Service\AuthorizationService;
+use Facile\OpenIDClient\Client\ClientInterface;
+use Facile\OAuth2\HttpClient\OAuth2Plugin;
+
+// create an OIDC/OAuth2 client and the AuthorizationService from facile-it/php-openid-client
+/** @var AuthorizationService $authorizationService */
+/** @var ClientInterface $client */
+
+$oauth2Plugin = new OAuth2Plugin(
+    $authorizationService,
+    $client,
+    null,
+    [],
+    false // disable authorization for each request
 );
 ```
