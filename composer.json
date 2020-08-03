@@ -33,7 +33,7 @@
         "psr-18"
     ],
     "require": {
-        "php": "^7.2",
+        "php": "^7.2 || ^8.0",
         "ext-json": "*",
         "facile-it/php-openid-client": "^0.1.2",
         "php-http/client-common": "^2.3",
