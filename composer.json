@@ -35,7 +35,7 @@
     "require": {
         "php": "^7.2 || ^8.0",
         "ext-json": "*",
-        "facile-it/php-openid-client": "^0.1.2",
+        "facile-it/php-openid-client": "^0.1.2 || ^0.2.0",
         "php-http/client-common": "^2.3",
         "psr/simple-cache": "^1.0"
     },
