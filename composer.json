@@ -58,7 +58,8 @@
         "phpstan/phpstan": "^0.12.18",
         "phpstan/phpstan-deprecation-rules": "^0.12.2",
         "phpstan/phpstan-strict-rules": "^0.12.2",
-        "phpunit/phpunit": "^8.5.8 || ~9.0.2"
+        "phpunit/phpunit": "^8.5.8 || ~9.0.2",
+        "phpspec/prophecy": "^1.10.3"
     },
     "scripts": {
         "cs-check": "php-cs-fixer fix --dry-run --diff --allow-risky=yes",
