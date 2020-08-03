@@ -101,6 +101,7 @@ class OAuth2PluginTest extends TestCase
         $tokenSet->getTokenType()->willReturn('bearer');
 
         $authorizationService->grant($client->reveal(), array_merge(
+            ['grant_type' => 'client_credentials'],
             $defaultGrantParams,
             $requestGrantParams
         ))
@@ -214,6 +215,7 @@ class OAuth2PluginTest extends TestCase
         $tokenSet->getTokenType()->willReturn('bearer');
 
         $authorizationService->grant($client->reveal(), array_merge(
+            ['grant_type' => 'client_credentials'],
             $defaultGrantParams,
             $requestGrantParams
         ))
@@ -325,6 +327,7 @@ class OAuth2PluginTest extends TestCase
         $tokenSet->getTokenType()->willReturn('bearer');
 
         $authorizationService->grant($client->reveal(), array_merge(
+            ['grant_type' => 'client_credentials'],
             $defaultGrantParams,
             $requestGrantParams
         ))
