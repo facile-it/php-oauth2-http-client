@@ -93,7 +93,7 @@ $oauth2Plugin = new OAuth2Plugin(
 );
 ```
 
-Optionally, you can create a custom `OAuth2Request` (it's a PSR-17 Request decorator) to use grant parameters for a 
+Optionally, you can create a custom `OAuth2Request` (it's a PSR-7 Request decorator) to use grant parameters for a 
 single request.  
 Request grant parameters will be merged with the default grant parameters injected in the plugin.
 
@@ -104,7 +104,7 @@ use Facile\OAuth2\HttpClient\Request\OAuth2Request;
 
 // use your PSR-18 HTTP client configured with our plugin
 /** @var HttpClient $psrHttpClient */
-// your HTTP request
+// your PSR-7 HTTP request
 /** @var RequestInterface $request */
 
 $oauth2Request = (new OAuth2Request($request))
